@@ -2,18 +2,18 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::Path;
 
-fn read_lines_from_file<P: AsRef<Path>>(filename: P) -> io::Result<Vec<String>> {
-    let file = File::open(filename)?;
+fn read_lines_from_file<P: AsRef<Path>>(filename: P) -> Vec<String> {
+    let file = File::open(filename).unwrap();
     let reader = BufReader::new(file);
-    reader.lines().collect()
+    reader.lines().collect::<io::Result<Vec<String>>>().unwrap()
 }
 
 fn load_rotations() -> Vec<String> {
-    read_lines_from_file("day1_input.txt").unwrap()
+    read_lines_from_file("day1_input.txt")
 }
 
 fn get_direction(rotation: &str) -> i32 {
-    let rotation = rotation.chars().next().unwrap();
+    let rotation = rotation.chars().nth(0).unwrap();
     match rotation {
         'L' => -1,
         'R' => 1,
@@ -22,9 +22,7 @@ fn get_direction(rotation: &str) -> i32 {
 }
 
 fn get_magnitude(rotation: &str) -> i32 {
-    let (index, _) = rotation.char_indices().nth(1).unwrap();
-    let rotation: i32 = rotation[index..].to_string().parse().unwrap();
-    rotation
+    rotation[1..].parse().unwrap()
 }
 
 fn spin_dial(position: i32, direction: i32, magnitude: i32, slots: i32) -> i32 {
@@ -57,7 +55,7 @@ fn read_ranges_from_file<P: AsRef<Path>>(filename: P) -> String {
     let reader = BufReader::new(file);
 
     // Only need to read the single line at the top of the file
-    reader.lines().flatten().next().unwrap()
+    reader.lines().flatten().nth(0).unwrap()
 }
 
 fn read_csv_line(input: &str) -> Vec<&str> {
