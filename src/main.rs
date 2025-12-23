@@ -1,15 +1,11 @@
 use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::io::{BufRead, BufReader, Lines};
 use std::path::Path;
 
-fn read_lines_from_file<P: AsRef<Path>>(filename: P) -> Vec<String> {
-    let file = File::open(filename).unwrap();
-    let reader = BufReader::new(file);
-    reader.lines().collect::<io::Result<Vec<String>>>().unwrap()
-}
-
-fn load_rotations() -> Vec<String> {
-    read_lines_from_file("day1_input.txt")
+fn load_rotations() -> Lines<BufReader<File>> {
+    let file_handle = File::open("day1_input.txt").unwrap();
+    let buffer = BufReader::new(file_handle);
+    buffer.lines()
 }
 
 fn get_direction(rotation: &str) -> i32 {
@@ -34,14 +30,21 @@ fn get_password() -> i32 {
     let mut position = 50;
     let rotations = load_rotations();
 
-    for rotation in rotations.iter() {
-        let direction = get_direction(rotation);
-        let magnitude = get_magnitude(rotation);
+    for rotation in rotations {
+        match rotation {
+            Ok(rotation) => {
+                let direction = get_direction(&rotation);
+                let magnitude = get_magnitude(&rotation);
 
-        position = spin_dial(position, direction, magnitude, 100);
+                position = spin_dial(position, direction, magnitude, 100);
 
-        if position == 0 {
-            password += 1;
+                if position == 0 {
+                    password += 1;
+                }
+            }
+            Err(err) => {
+                eprintln!("Error parsing rotation: {}", err);
+            }
         }
     }
 
