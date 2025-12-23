@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader, Lines};
-use std::path::Path;
 
 fn load_rotations() -> Lines<BufReader<File>> {
     let file_handle = File::open("day1_input.txt").unwrap();
@@ -53,16 +52,11 @@ fn get_password() -> i32 {
 
 // Day 2
 
-fn read_ranges_from_file<P: AsRef<Path>>(filename: P) -> String {
-    let file = File::open(filename).unwrap();
-    let reader = BufReader::new(file);
-
-    // Only need to read the single line at the top of the file
-    reader.lines().flatten().nth(0).unwrap()
-}
-
-fn read_csv_line(input: &str) -> Vec<&str> {
-    input.split(',').collect()
+fn read_ranges_from_file() -> String {
+    std::fs::read_to_string("day2_input.txt")
+        .unwrap()
+        .trim()
+        .to_owned()
 }
 
 fn parse_range(string_range: &str) -> (i64, i64) {
@@ -70,11 +64,7 @@ fn parse_range(string_range: &str) -> (i64, i64) {
     (min.parse().unwrap(), max.parse().unwrap())
 }
 
-fn parse_ranges(string_ranges: Vec<&str>) -> Vec<(i64, i64)> {
-    string_ranges.into_iter().map(parse_range).collect()
-}
-
-fn check_id(id: i64) -> bool {
+fn check_id(id: &i64) -> bool {
     let string_repr: String = id.to_string();
     let half = string_repr.len() / 2;
     let (front, back) = string_repr.split_at(half);
@@ -84,17 +74,20 @@ fn check_id(id: i64) -> bool {
 
 fn check_range(range: (i64, i64)) -> i64 {
     let (min, max) = range;
-    (min..=max).filter(|&id| check_id(id)).sum()
+    (min..=max).filter(check_id).sum()
 }
 
-fn check_ranges(ranges: Vec<(i64, i64)>) -> i64 {
-    ranges.into_iter().map(check_range).sum()
+fn parse_ranges(string_ranges: &str) -> i64 {
+    string_ranges
+        .split(',')
+        .map(parse_range)
+        .map(check_range)
+        .sum()
 }
 
 fn get_invalid_ids() -> i64 {
-    let file_input = read_ranges_from_file("day2_input.txt");
-    let ranges = parse_ranges(read_csv_line(&file_input));
-    check_ranges(ranges)
+    let file_input = read_ranges_from_file();
+    parse_ranges(&file_input)
 }
 
 fn main() {
