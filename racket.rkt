@@ -107,4 +107,39 @@
   (for/sum ([bank (load-joltage-banks)])
     (get-max-joltage bank)))
 
-(displayln (format "Day 3 - Part 1: Total Output Joltage from banks = ~a" (get-total-joltage)))
+(displayln (format "Day 3: (Part 1) Total Output Joltage from banks = ~a" (get-total-joltage)))
+
+;;; Part 2
+;;; Using 12 digits instead of 2
+
+(define (load-joltage-banks-2)
+  (map get-digits (load-joltage-banks)))
+
+(define (all-but-last-n-digits bank n)
+  (take bank (- (length bank) n)))
+
+(define (max-digit-n bank total-digits-left-to-use)
+  (apply max (all-but-last-n-digits bank (sub1 total-digits-left-to-use))))
+
+(define (remaining-digits-after value bank)
+  (cdr (member value bank)))
+
+(define (get-digit-value digit position)
+  (* digit (expt 10 (sub1 position))))
+
+(define (find-digits-iter digits number-of-digits-left total)
+  (if (or (= number-of-digits-left 0) (null? digits))
+      total
+      (let ([current-digit (max-digit-n digits number-of-digits-left)])
+        (find-digits-iter (remaining-digits-after current-digit digits)
+                          (sub1 number-of-digits-left)
+                          (+ total (get-digit-value current-digit number-of-digits-left))))))
+
+(define (get-max-joltage-2 bank total-digits)
+  (find-digits-iter bank total-digits 0))
+
+(define (get-total-joltage-2)
+  (for/sum ([bank (load-joltage-banks-2)])
+    (get-max-joltage-2 bank 12)))
+
+(displayln (format "Day 3: (Part 2) Total Output Joltage from banks = ~a" (get-total-joltage-2)))
