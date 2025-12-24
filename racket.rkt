@@ -143,3 +143,64 @@
     (get-max-joltage-2 bank 12)))
 
 (displayln (format "Day 3: (Part 2) Total Output Joltage from banks = ~a" (get-total-joltage-2)))
+
+
+;; Day 3
+
+(define (load-rolls)
+  (map symbol->string (file->list "day4_input.txt")))
+
+(define (make-position row col)
+  (list row col))
+
+(define (get-row position)
+  (car position))
+
+(define (get-col position)
+  (cadr position))
+
+(define (get-char position rolls)
+  (string-ref (list-ref rolls (get-row position)) (get-col position)))
+
+(define (is-roll? position rolls)
+  (let ([char (get-char position rolls)])
+    (equal? char #\@)))
+
+(define (check-position position rolls)
+  (let ([row (get-row position)]
+        [col (get-col position)])
+    (cond
+      [(or (< row 0) (>= row (length rolls))) 0]
+      [(or (< col 0) (>= col (string-length (car rolls)))) 0]
+      [else (if (is-roll? position rolls) 1 0)])))
+
+(define (adjacent-positions row col)
+  (list (make-position (sub1 row) (sub1 col))
+        (make-position (sub1 row) col)
+        (make-position (sub1 row) (add1 col))
+        (make-position row (sub1 col))
+        (make-position row (add1 col))
+        (make-position (add1 row) (sub1 col))
+        (make-position (add1 row) col)
+        (make-position (add1 row) (add1 col))))
+
+(define (count-adjacent-rolls position rolls)
+  (let ([row (get-row position)]
+        [col (get-col position)])
+    (for/sum ([position (adjacent-positions row col)])
+      (check-position position rolls))))
+
+(define (count-roll position rolls min)
+  (if (not (is-roll? position rolls))
+      0
+      (if (< (count-adjacent-rolls position rolls) min) 1 0)))
+
+(define (count-row row rolls min)
+  (for/sum ([col (in-range 0 (string-length (list-ref rolls row)))])
+    (count-roll (make-position row col) rolls min)))
+
+(define (count-total-rolls rolls min)
+  (for/sum ([row (in-range 0 (length rolls))])
+    (count-row row rolls min)))
+
+(displayln (format "Day 4: (Part 1) Total available rolls = ~a" (count-total-rolls (load-rolls) 4)))
