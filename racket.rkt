@@ -71,3 +71,40 @@
     (sum-invalids-in-range range)))
 
 (displayln (format "Day 2: Sum of Invalid IDs = ~a" (sum-ranges)))
+
+
+;; ------ Day 3 ---------
+
+(define (load-joltage-banks)
+  (file->list "day3_input.txt"))
+
+(define (all-but-last-digit bank)
+  (quotient bank 10))
+
+(define (get-digits bank)
+  (map string->number (map string (string->list (number->string bank)))))
+
+(define (max-first-digit bank)
+  (apply max (get-digits (all-but-last-digit bank))))
+
+(define (max-after-first-digit first-digit bank)
+  (apply max (cdr (member first-digit (get-digits bank)))))
+
+(define (get-joltage-digits bank)
+  (let* ([first-digit
+          (max-first-digit bank)]
+         [second-digit
+          (max-after-first-digit first-digit bank)])
+    (list first-digit second-digit)))
+
+(define (digits->number digits)
+  (+ (* 10 (car digits)) (cadr digits)))
+
+(define (get-max-joltage bank)
+  (digits->number (get-joltage-digits bank)))
+
+(define (get-total-joltage)
+  (for/sum ([bank (load-joltage-banks)])
+    (get-max-joltage bank)))
+
+(displayln (format "Day 3 - Part 1: Total Output Joltage from banks = ~a" (get-total-joltage)))
