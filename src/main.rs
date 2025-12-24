@@ -1,6 +1,13 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader, Lines};
 
+fn main() {
+    println!("Day 1: Secret Entrance - Password = {}", get_password());
+    println!("Day 2: Invalid IDs - Ranges = {}", get_invalid_ids());
+    println!("Day 3 (Part 1): Total Joltage = {}", get_total_joltage(2));
+    println!("Day 4 (Part 2): Total Joltage = {}", get_total_joltage(12));
+}
+
 fn load_rotations() -> Lines<BufReader<File>> {
     let file_handle = File::open("day1_input.txt").unwrap();
     let buffer = BufReader::new(file_handle);
@@ -90,7 +97,43 @@ fn get_invalid_ids() -> i64 {
     parse_ranges(&file_input)
 }
 
-fn main() {
-    println!("Day 1: Secret Entrance - Password = {}", get_password());
-    println!("Day 2: Invalid IDs - Ranges = {}", get_invalid_ids());
+// Day 3
+
+fn load_banks() -> Lines<BufReader<File>> {
+    let file_handle = File::open("day3_input.txt").unwrap();
+    BufReader::new(file_handle).lines()
+}
+
+fn get_total_joltage(digits: usize) -> i64 {
+    load_banks()
+        .map(|bank_result| get_max_joltage(bank_result, digits))
+        .sum()
+}
+
+fn get_max_joltage(bank_result: Result<String, std::io::Error>, digits: usize) -> i64 {
+    let line: Vec<char> = bank_result.unwrap().chars().collect();
+
+    let mut num_digits = digits;
+    let mut begin_search_range: usize = 0;
+
+    let mut joltage = String::new();
+
+    while num_digits > 0 {
+        let slice = &line[begin_search_range..=line.len() - num_digits];
+        let mut max = '0';
+        let mut position = 0;
+        for (i, c) in slice.iter().enumerate() {
+            if *c > max {
+                max = *c;
+                position = i;
+            }
+        }
+
+        begin_search_range += position + 1;
+        num_digits -= 1;
+
+        joltage.push(max);
+    }
+
+    joltage.trim().parse().unwrap()
 }
