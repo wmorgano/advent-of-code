@@ -32,7 +32,7 @@
 (define (get-password)
   (rotate-iter dial-initial 0 (load-rotations "day1_input.txt")))
 
-(displayln (format "Day 1: Password = ~a" (get-password)))
+;(displayln (format "Day 1: Password = ~a" (get-password)))
 
 
 ;; --- Day 2 -----
@@ -70,7 +70,7 @@
   (for/sum ([range (load-ranges)])
     (sum-invalids-in-range range)))
 
-(displayln (format "Day 2: Sum of Invalid IDs = ~a" (sum-ranges)))
+;(displayln (format "Day 2: Sum of Invalid IDs = ~a" (sum-ranges)))
 
 
 ;; ------ Day 3 ---------
@@ -107,7 +107,7 @@
   (for/sum ([bank (load-joltage-banks)])
     (get-max-joltage bank)))
 
-(displayln (format "Day 3: (Part 1) Total Output Joltage from banks = ~a" (get-total-joltage)))
+;(displayln (format "Day 3: (Part 1) Total Output Joltage from banks = ~a" (get-total-joltage)))
 
 ;;; Part 2
 ;;; Using 12 digits instead of 2
@@ -142,7 +142,7 @@
   (for/sum ([bank (load-joltage-banks-2)])
     (get-max-joltage-2 bank 12)))
 
-(displayln (format "Day 3: (Part 2) Total Output Joltage from banks = ~a" (get-total-joltage-2)))
+;(displayln (format "Day 3: (Part 2) Total Output Joltage from banks = ~a" (get-total-joltage-2)))
 
 
 ;; Day 3
@@ -203,7 +203,7 @@
   (for/sum ([row (in-range 0 (length rolls))])
     (count-row row rolls min)))
 
-(displayln (format "Day 4: (Part 1) Total available rolls = ~a" (count-total-rolls (load-rolls) 4)))
+;(displayln (format "Day 4: (Part 1) Total available rolls with one pass= ~a" (count-total-rolls (load-rolls) 4)))
 
 ;;;; Part 4
 
@@ -239,3 +239,107 @@
   (let ([processed (process-all rolls min)])
     (for/sum ([row processed])
       (count-row-2 row))))
+
+;(displayln (format "Day 4: (Part 2) Total available rolls = ~a" (count-total-removed (load-rolls) 4)))
+
+;; Day 5
+
+(define (load-ranges-data)
+  (map symbol->string (file->list "day5_input_ranges.txt")))
+
+(define (load-ranges-id)
+  (map string->range (load-ranges-data)))
+
+(define (load-ids)
+  (file->list "day5_input_values.txt"))
+
+(define (make-range min max)
+  (list min max))
+
+(define (min-range rng)
+  (car rng))
+
+(define (max-range rng)
+  (cadr rng))
+
+(define (enumerate-range rng)
+  (range (min-range rng) (add1 (max-range rng))))
+
+(define (string->range str)
+  (let ([vals (string-split str "-")])
+    (apply make-range (map string->number vals))))
+
+(define (inspect-ingredient id ranges)
+  (if (is-in-ranges id ranges) 1 0))
+
+(define (is-in-range id rng)
+  (and (>= id (min-range rng)) (<= id (max-range rng))))
+
+(define (is-in-ranges id ranges)
+  (cond [(null? ranges) #f]
+        [(is-in-range id (car ranges)) #t]
+        [else (is-in-ranges id (cdr ranges))]))
+
+(define (get-fresh-ingredients)
+  (for/sum ([id (load-ids)])
+    (inspect-ingredient id (load-ranges-id))))
+
+;(displayln (format "Day 5: (Part 1) Total fresh ingredients = ~a" (get-fresh-ingredients)))
+
+;; Part 2
+
+(define (sort-ranges ranges)
+  (sort ranges < #:key min-range))
+
+(define (merge-ranges a b)
+  (make-range (apply min (map min-range (list a b))) (apply max (map max-range (list a b)))))
+
+(define (is-overlap a b)
+  (>= (max-range a) (sub1 (min-range b))))
+
+(define (try-merge current rest)
+  (let ([last-merged (car rest)])
+    (if (is-overlap last-merged current)
+        (cons (merge-ranges last-merged current) (cdr rest))
+        (cons current rest))))
+
+(define (merge-sorted-ranges ranges)
+  (if (or (null? ranges) (null? (cdr ranges))) ranges
+      (let ([first (car ranges)]
+            [second (cadr ranges)]
+            [rest (cddr ranges)])
+        (if (is-overlap first second)
+            (merge-sorted-ranges (cons (merge-ranges first second) rest))
+            (cons first (merge-sorted-ranges (cons second rest)))))))
+
+;; An alternative implementation using fold
+(define (merge-sorted-ranges-fold sorted-ranges)
+  (if (null? sorted-ranges)
+      '()
+      (reverse 
+       (foldl try-merge
+              (list (car sorted-ranges))
+              (cdr sorted-ranges)))))
+
+;; An alternative implemention using for/fold
+(define (merge-sorted-ranges-for-fold sorted-ranges)
+  (if (null? sorted-ranges)
+      '()
+      (reverse
+       (for/fold ([merged-ranges (list (car sorted-ranges))])
+                 ([current (cdr sorted-ranges)])
+         (if (is-overlap (car merged-ranges) current)
+             (cons (merge-ranges (car merged-ranges) current) (cdr merged-ranges))
+             (cons current merged-ranges))))))
+
+(define (merge-all-ranges ranges)
+  (merge-sorted-ranges-for-fold (sort-ranges ranges)))
+
+(define (count-range rng)
+  (add1 (- (max-range rng) (min-range rng))))
+
+(define (count-distinct-ids ranges)
+  (for/sum ([rng (merge-all-ranges ranges)])
+    (count-range rng)))
+
+(displayln (format "Day 5: (Part 2) Total fresh ingredient IDs available = ~a" (count-distinct-ids (load-ranges-id))))
