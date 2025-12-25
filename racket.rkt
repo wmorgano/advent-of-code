@@ -148,7 +148,7 @@
 ;; Day 3
 
 (define (load-rolls)
-  (map symbol->string (file->list "day4_input.txt")))
+  (map string->list (map symbol->string (file->list "day4_input.txt"))))
 
 (define (make-position row col)
   (list row col))
@@ -160,7 +160,7 @@
   (cadr position))
 
 (define (get-char position rolls)
-  (string-ref (list-ref rolls (get-row position)) (get-col position)))
+  (list-ref (list-ref rolls (get-row position)) (get-col position)))
 
 (define (is-roll? position rolls)
   (let ([char (get-char position rolls)])
@@ -171,7 +171,7 @@
         [col (get-col position)])
     (cond
       [(or (< row 0) (>= row (length rolls))) 0]
-      [(or (< col 0) (>= col (string-length (car rolls)))) 0]
+      [(or (< col 0) (>= col (length (car rolls)))) 0]
       [else (if (is-roll? position rolls) 1 0)])))
 
 (define (adjacent-positions row col)
@@ -196,7 +196,7 @@
       (if (< (count-adjacent-rolls position rolls) min) 1 0)))
 
 (define (count-row row rolls min)
-  (for/sum ([col (in-range 0 (string-length (list-ref rolls row)))])
+  (for/sum ([col (in-range 0 (length (list-ref rolls row)))])
     (count-roll (make-position row col) rolls min)))
 
 (define (count-total-rolls rolls min)
@@ -204,3 +204,38 @@
     (count-row row rolls min)))
 
 (displayln (format "Day 4: (Part 1) Total available rolls = ~a" (count-total-rolls (load-rolls) 4)))
+
+;;;; Part 4
+
+(define (move-char position rolls min)
+  (if (= (count-roll position rolls min) 1)
+      #\x
+      (get-char position rolls)))
+
+(define (process-row row rolls min)
+  (for/list ([col (in-range 0 (length (list-ref rolls row)))])
+    (move-char (make-position row col) rolls min)))
+
+(define (process-grid rolls min)
+  (for/list ([row (in-range 0 (length rolls))])
+    (process-row row rolls min)))
+
+(define (process-iter rolls min updated-grid)
+  (if (equal? rolls updated-grid)
+      updated-grid
+      (process-iter updated-grid min (process-grid updated-grid min))))
+
+;; Process until the grid stops changing
+(define (process-all rolls min)
+  (process-iter rolls min (process-grid rolls min)))
+
+(define (is-removed? char)
+  (equal? char #\x))
+
+(define (count-row-2 row)
+  (count is-removed? row))
+
+(define (count-total-removed rolls min)
+  (let ([processed (process-all rolls min)])
+    (for/sum ([row processed])
+      (count-row-2 row))))
