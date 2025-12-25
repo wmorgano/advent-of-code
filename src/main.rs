@@ -4,15 +4,20 @@ use std::io::{BufRead, BufReader, Lines};
 fn main() {
     println!("Day 1: Secret Entrance - Password = {}", get_password());
     println!("Day 2: Invalid IDs - Ranges = {}", get_invalid_ids());
-    println!("Day 3 (Part 1): Total Joltage = {}", get_total_joltage(2));
-    println!("Day 4 (Part 2): Total Joltage = {}", get_total_joltage(12));
+    println!("Day 3: (Part 1) Total Joltage = {}", get_total_joltage(2));
+    println!("Day 3: (Part 2) Total Joltage = {}", get_total_joltage(12));
     println!(
-        "Day 5 (Part 1): Total removable rolls with one pass = {}",
+        "Day 4: (Part 1) Total removable rolls with one pass = {}",
         get_removable_rolls_first_pass()
     );
     println!(
-        "Day 5 (Part 2): Total rolls removed = {}",
+        "Day 4: (Part 2) Total rolls removed = {}",
         get_total_rolls_removed()
+    );
+    println!("Day 5: (Part 1) Valid IDs - Count = {}", count_valid_ids());
+    println!(
+        "Day 5: (Part 2) Total available IDs = {}",
+        count_all_intervals()
     );
 }
 
@@ -301,4 +306,103 @@ fn get_removable_rolls_first_pass() -> i32 {
 fn get_total_rolls_removed() -> i32 {
     let mut grid = Grid::new(load_rolls());
     grid.process_grid_full()
+}
+
+// Day 5
+// Part 1
+
+#[derive(Copy, Clone)]
+struct Interval {
+    min: i64,
+    max: i64,
+}
+
+impl Interval {
+    fn new(min: i64, max: i64) -> Self {
+        Interval { min, max }
+    }
+
+    fn contains(&self, value: i64) -> bool {
+        self.min <= value && value <= self.max
+    }
+
+    fn size(&self) -> i64 {
+        self.max - self.min + 1
+    }
+
+    fn merge(a: &Interval, b: &Interval) -> Interval {
+        Interval::new(std::cmp::min(a.min, b.min), std::cmp::max(a.max, b.max))
+    }
+
+    fn is_overlap(&self, other: &Interval) -> bool {
+        self.max >= other.min - 1
+    }
+}
+
+fn load_id_ranges() -> Vec<Interval> {
+    let file = File::open("day5_input_ranges.txt").unwrap();
+    let buffer = BufReader::new(file).lines();
+
+    let mut ranges = Vec::new();
+
+    for line in buffer {
+        let content = line.unwrap();
+        let split = content.split_once('-').unwrap();
+        ranges.push(Interval::new(
+            split.0.parse().unwrap(),
+            split.1.parse().unwrap(),
+        ));
+    }
+
+    ranges
+}
+
+fn load_id_values() -> Vec<i64> {
+    let file = File::open("day5_input_values.txt").unwrap();
+    let buffer = BufReader::new(file).lines();
+
+    buffer.map(|line| line.unwrap().parse().unwrap()).collect()
+}
+
+fn is_valid_id(id: i64) -> bool {
+    let ranges = load_id_ranges();
+    ranges.iter().any(|range| range.contains(id))
+}
+
+fn count_valid_ids() -> usize {
+    let values = load_id_values();
+    values.iter().filter(|&&id| is_valid_id(id)).count()
+}
+
+fn sort_ranges(ranges: &mut Vec<Interval>) {
+    ranges.sort_by_key(|range| range.min);
+}
+
+fn merge_ranges(ranges: &mut Vec<Interval>) {
+    if ranges.is_empty() {
+        return;
+    }
+
+    sort_ranges(ranges);
+
+    let mut merged = Vec::new();
+    merged.push(ranges[0]);
+
+    let merged = ranges.iter().skip(1).fold(merged, |mut merged, range| {
+        if merged.last().unwrap().is_overlap(range) {
+            let last = merged.pop().unwrap();
+            merged.push(Interval::merge(&last, range));
+        } else {
+            merged.push(*range);
+        }
+        merged
+    });
+
+    *ranges = merged;
+}
+
+fn count_all_intervals() -> i64 {
+    let mut ranges = load_id_ranges();
+    merge_ranges(&mut ranges);
+    ranges.iter().map(|range| range.size()).sum()
 }
