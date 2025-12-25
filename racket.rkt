@@ -32,7 +32,8 @@
 (define (get-password)
   (rotate-iter dial-initial 0 (load-rotations "day1_input.txt")))
 
-;(displayln (format "Day 1: Password = ~a" (get-password)))
+(define (solve-1)
+  (displayln (format "Day 1: Password = ~a" (get-password))))
 
 
 ;; --- Day 2 -----
@@ -70,7 +71,8 @@
   (for/sum ([range (load-ranges)])
     (sum-invalids-in-range range)))
 
-;(displayln (format "Day 2: Sum of Invalid IDs = ~a" (sum-ranges)))
+(define (solve-2)
+  (displayln (format "Day 2: Sum of Invalid IDs = ~a" (sum-ranges))))
 
 
 ;; ------ Day 3 ---------
@@ -107,9 +109,7 @@
   (for/sum ([bank (load-joltage-banks)])
     (get-max-joltage bank)))
 
-;(displayln (format "Day 3: (Part 1) Total Output Joltage from banks = ~a" (get-total-joltage)))
-
-;;; Part 2
+;;; Day 3 Part 2
 ;;; Using 12 digits instead of 2
 
 (define (load-joltage-banks-2)
@@ -142,10 +142,12 @@
   (for/sum ([bank (load-joltage-banks-2)])
     (get-max-joltage-2 bank 12)))
 
-;(displayln (format "Day 3: (Part 2) Total Output Joltage from banks = ~a" (get-total-joltage-2)))
+(define (solve-3)
+  (displayln (format "Day 3: (Part 1) Total Output Joltage from banks = ~a" (get-total-joltage)))
+  (displayln (format "Day 3: (Part 2) Total Output Joltage from banks = ~a" (get-total-joltage-2))))
 
 
-;; Day 3
+;; Day 4
 
 (define (load-rolls)
   (map string->list (map symbol->string (file->list "day4_input.txt"))))
@@ -203,9 +205,7 @@
   (for/sum ([row (in-range 0 (length rolls))])
     (count-row row rolls min)))
 
-;(displayln (format "Day 4: (Part 1) Total available rolls with one pass= ~a" (count-total-rolls (load-rolls) 4)))
-
-;;;; Part 4
+;;;; Day 4 Part 2
 
 (define (move-char position rolls min)
   (if (= (count-roll position rolls min) 1)
@@ -240,7 +240,9 @@
     (for/sum ([row processed])
       (count-row-2 row))))
 
-;(displayln (format "Day 4: (Part 2) Total available rolls = ~a" (count-total-removed (load-rolls) 4)))
+(define (solve-4)
+  (displayln (format "Day 4: (Part 1) Total available rolls with one pass= ~a" (count-total-rolls (load-rolls) 4)))
+  (displayln (format "Day 4: (Part 2) Total available rolls = ~a" (count-total-removed (load-rolls) 4))))
 
 ;; Day 5
 
@@ -284,9 +286,7 @@
   (for/sum ([id (load-ids)])
     (inspect-ingredient id (load-ranges-id))))
 
-;(displayln (format "Day 5: (Part 1) Total fresh ingredients = ~a" (get-fresh-ingredients)))
-
-;; Part 2
+;; Day 5 Part 2
 
 (define (sort-ranges ranges)
   (sort ranges < #:key min-range))
@@ -342,4 +342,6 @@
   (for/sum ([rng (merge-all-ranges ranges)])
     (count-range rng)))
 
-(displayln (format "Day 5: (Part 2) Total fresh ingredient IDs available = ~a" (count-distinct-ids (load-ranges-id))))
+(define (solve-5)
+  (displayln (format "Day 5: (Part 1) Total fresh ingredients = ~a" (get-fresh-ingredients)))
+  (displayln (format "Day 5: (Part 2) Total fresh ingredient IDs available = ~a" (count-distinct-ids (load-ranges-id)))))
