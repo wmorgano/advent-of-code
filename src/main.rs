@@ -200,39 +200,28 @@ impl Grid {
     }
 
     fn get_adjacent_positions(&self, current: &Position) -> Vec<Position> {
-        let Position(row, column) = *current;
+        let Position(row, col) = *current;
 
-        let mut positions = Vec::new();
+        #[rustfmt::skip]
+        let offsets = [
+            (-1, -1), (-1, 0), (-1, 1),
+            ( 0, -1),          ( 0, 1),
+            ( 1, -1), ( 1, 0), ( 1, 1),
+        ];
 
-        if row > 0 {
-            positions.push(Position(row - 1, column));
-            if column > 0 {
-                positions.push(Position(row - 1, column - 1));
-            }
-            if column < self.col_max {
-                positions.push(Position(row - 1, column + 1));
-            }
-        }
+        offsets
+            .iter()
+            .filter_map(|&(row_delta, column_delta)| {
+                let new_row = row.checked_add_signed(row_delta)?;
+                let new_col = col.checked_add_signed(column_delta)?;
 
-        if row < self.row_max {
-            positions.push(Position(row + 1, column));
-            if column > 0 {
-                positions.push(Position(row + 1, column - 1));
-            }
-            if column < self.col_max {
-                positions.push(Position(row + 1, column + 1));
-            }
-        }
-
-        if column > 0 {
-            positions.push(Position(row, column - 1));
-        }
-
-        if column < self.col_max {
-            positions.push(Position(row, column + 1));
-        }
-
-        positions
+                if new_row <= self.row_max && new_col <= self.col_max {
+                    Some(Position(new_row, new_col))
+                } else {
+                    None
+                }
+            })
+            .collect()
     }
 
     fn count_adjacent_rolls(&self, current: &Position) -> u8 {
