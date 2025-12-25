@@ -21,10 +21,13 @@ fn main() {
     );
 }
 
+fn read_lines(fname: &str) -> Lines<BufReader<File>> {
+    let file_handle = File::open(fname).unwrap();
+    BufReader::new(file_handle).lines()
+}
+
 fn load_rotations() -> Lines<BufReader<File>> {
-    let file_handle = File::open("day1_input.txt").unwrap();
-    let buffer = BufReader::new(file_handle);
-    buffer.lines()
+    read_lines("day1_input.txt")
 }
 
 fn get_direction(rotation: &str) -> i32 {
@@ -113,8 +116,7 @@ fn get_invalid_ids() -> i64 {
 // Day 3
 
 fn load_banks() -> Lines<BufReader<File>> {
-    let file_handle = File::open("day3_input.txt").unwrap();
-    BufReader::new(file_handle).lines()
+    read_lines("day3_input.txt")
 }
 
 fn get_total_joltage(digits: usize) -> i64 {
@@ -152,8 +154,7 @@ fn get_max_joltage(bank_result: Result<String, std::io::Error>, digits: usize) -
 }
 
 fn load_rolls() -> Vec<Vec<char>> {
-    let file_handle = File::open("day4_input.txt").unwrap();
-    let lines = BufReader::new(file_handle).lines();
+    let lines = read_lines("day4_input.txt");
 
     let mut rolls = Vec::new();
 
@@ -340,8 +341,7 @@ impl Interval {
 }
 
 fn load_id_ranges() -> Vec<Interval> {
-    let file = File::open("day5_input_ranges.txt").unwrap();
-    let buffer = BufReader::new(file).lines();
+    let buffer = read_lines("day5_input_ranges.txt");
 
     let mut ranges = Vec::new();
 
@@ -358,8 +358,7 @@ fn load_id_ranges() -> Vec<Interval> {
 }
 
 fn load_id_values() -> Vec<i64> {
-    let file = File::open("day5_input_values.txt").unwrap();
-    let buffer = BufReader::new(file).lines();
+    let buffer = read_lines("day5_input_values.txt");
 
     buffer.map(|line| line.unwrap().parse().unwrap()).collect()
 }
