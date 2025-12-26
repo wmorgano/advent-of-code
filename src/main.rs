@@ -19,6 +19,10 @@ fn main() {
         "Day 5: (Part 2) Total available IDs = {}",
         count_all_intervals()
     );
+    println!(
+        "Day 6: (Part 2) Sum of equation results = {}",
+        process_worksheet()
+    );
 }
 
 fn read_lines(fname: &str) -> Lines<BufReader<File>> {
@@ -404,4 +408,111 @@ fn count_all_intervals() -> i64 {
     let mut ranges = load_id_ranges();
     merge_ranges(&mut ranges);
     ranges.iter().map(|range| range.size()).sum()
+}
+
+// Day 6
+
+fn load_equation_data() -> Vec<String> {
+    read_lines("day6_input.txt")
+        .map(|line| line.unwrap())
+        .collect()
+}
+
+struct Equation {
+    operator: char,
+    operands: Vec<i64>,
+}
+
+impl Equation {
+    fn new(operator: char, operands: Vec<i64>) -> Self {
+        Equation { operator, operands }
+    }
+
+    fn operate(&self) -> i64 {
+        match self.operator {
+            '+' => self.operands.iter().sum(),
+            '*' => self.operands.iter().product(),
+            _ => panic!("Invalid operator"),
+        }
+    }
+}
+
+struct Worksheet {
+    raw_data: Vec<String>,
+    equations: Vec<Equation>,
+    num_eqns: usize,
+    size_eqns: usize,
+    operator_index: usize,
+}
+
+impl Worksheet {
+    fn new(raw_data: Vec<String>) -> Self {
+        let num_eqns = raw_data[0].len();
+        let size_eqns = raw_data.len() - 1;
+        let operator_index = raw_data.len() - 1;
+        Worksheet {
+            raw_data,
+            equations: Vec::new(),
+            num_eqns,
+            size_eqns,
+            operator_index,
+        }
+    }
+
+    fn evaluate(&self) -> i64 {
+        self.equations
+            .iter()
+            .map(|equation| equation.operate())
+            .sum()
+    }
+}
+
+fn process_worksheet() -> i64 {
+    let raw_data = load_equation_data();
+    let mut worksheet = Worksheet::new(raw_data);
+
+    let mut current_operands = Vec::new();
+    let mut string_number = String::new();
+
+    // Skip separator rows containing a full column of empty space
+    for col in (0..worksheet.num_eqns).rev() {
+        let is_empty_col = (0..=worksheet.size_eqns).all(|row| {
+            let ch = worksheet.raw_data[row].chars().nth(col).unwrap_or(' ');
+            ch == ' '
+        });
+
+        if is_empty_col {
+            continue;
+        }
+
+        // Collect digits in column into string representation of integer
+        for row in 0..worksheet.size_eqns {
+            let digit = worksheet.raw_data[row].chars().nth(col);
+            match digit {
+                Some('0'..='9') => string_number.push(digit.unwrap()),
+                Some(' ') => (),
+                _ => panic!("Invalid digit at col {}", col),
+            };
+        }
+
+        // Convert string representation to i64 and add to operand list
+        let num: i64 = string_number.parse().unwrap();
+        current_operands.push(num);
+        string_number.clear();
+
+        // Finish the equation if in the operator column
+        let op_char = worksheet.raw_data[worksheet.operator_index]
+            .chars()
+            .nth(col)
+            .unwrap_or(' ');
+
+        if op_char == '+' || op_char == '*' {
+            worksheet
+                .equations
+                .push(Equation::new(op_char, current_operands.clone()));
+            current_operands.clear();
+        }
+    }
+
+    worksheet.evaluate()
 }
