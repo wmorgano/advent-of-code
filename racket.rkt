@@ -316,7 +316,7 @@
 (define (merge-sorted-ranges-fold sorted-ranges)
   (if (null? sorted-ranges)
       '()
-      (reverse 
+      (reverse
        (foldl try-merge
               (list (car sorted-ranges))
               (cdr sorted-ranges)))))
@@ -345,3 +345,36 @@
 (define (solve-5)
   (displayln (format "Day 5: (Part 1) Total fresh ingredients = ~a" (get-fresh-ingredients)))
   (displayln (format "Day 5: (Part 2) Total fresh ingredient IDs available = ~a" (count-distinct-ids (load-ranges-id)))))
+
+
+;; Day 6
+;;; Part 1
+
+(define (split-lines lines)
+  (map string-trim (string-split lines "\n")))
+
+(define (split-elements lines)
+  (map string-split lines))
+
+(define (load-problems)
+  (split-elements (split-lines (file->string "day6_input.txt"))))
+
+(define (transpose data)
+  (apply map list data))
+
+(define (get-matrix)
+  (transpose (load-problems)))
+
+(define (convert-types lst)
+  (if (null? (cdr lst))
+      (list (string->symbol (car lst)))
+      (cons (string->number (car lst)) (convert-types (cdr lst)))))
+
+(define (calculate-eqn eqn)
+  (eval (reverse (convert-types eqn))))
+
+(define (calculate-sum)
+  (for/sum ([eqn (get-matrix)])
+    (calculate-eqn eqn)))
+
+(displayln (format "Day 6: (Part 1) Total sum of equations = ~a" (calculate-sum)))
