@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Lines};
 
@@ -22,6 +23,14 @@ fn main() {
     println!(
         "Day 6: (Part 2) Sum of equation results = {}",
         process_worksheet()
+    );
+    println!(
+        "Day 7: (Part 1) Number of Tachyons split = {}",
+        process_tachyon_data()
+    );
+    println!(
+        "Day 7: (Part 2) Number of Tachyon timelines = {}",
+        get_tachyon_timelines()
     );
 }
 
@@ -515,4 +524,107 @@ fn process_worksheet() -> i64 {
     }
 
     worksheet.evaluate()
+}
+
+fn load_tachyon_data() -> Vec<Vec<char>> {
+    let input = read_lines("day6_part1_input.txt");
+
+    input.map(|line| line.unwrap().chars().collect()).collect()
+}
+
+fn process_tachyons(mut data: Vec<Vec<char>>) -> (Vec<Vec<char>>, i32) {
+    let mut splits = 0;
+    for row in 0..data.len() - 1 {
+        for col in 0..data[0].len() {
+            let ch = data[row][col];
+            if ch == 'S' {
+                data[row + 1][col] = '|';
+            }
+            if ch == '|' {
+                let below = data[row + 1][col];
+                if below == '^' {
+                    splits += 1;
+                    if col != 0 {
+                        data[row + 1][col - 1] = '|';
+                    }
+                    if col != data[0].len() - 1 {
+                        data[row + 1][col + 1] = '|';
+                    }
+                } else {
+                    data[row + 1][col] = '|';
+                }
+            }
+        }
+    }
+    (data, splits)
+}
+
+fn count_paths(data: Vec<Vec<char>>) -> i64 {
+    let mut paths = 0;
+    let mut memo = HashMap::new();
+    let row = 0;
+    for col in 0..data[row].len() {
+        let ch = data[row][col];
+        if ch == 'S' {
+            paths += count_paths_from_start_memo(&data, row + 1, col, &mut memo);
+        }
+    }
+    paths
+}
+
+fn count_paths_from_start_memo(
+    data: &Vec<Vec<char>>,
+    row: usize,
+    col: usize,
+    memo: &mut HashMap<(usize, usize), i64>,
+) -> i64 {
+    // Check if we've already computed this position
+    if let Some(&cached_result) = memo.get(&(row, col)) {
+        return cached_result;
+    }
+
+    // Reached end of path
+    if row >= data.len() - 1 {
+        memo.insert((row, col), 1);
+        return 1;
+    }
+
+    // Check bounds
+    if col >= data[row].len() {
+        memo.insert((row, col), 0);
+        return 0;
+    }
+
+    let mut paths = 0;
+    let ch = data[row][col];
+
+    match ch {
+        '|' => {
+            paths += count_paths_from_start_memo(data, row + 1, col, memo);
+        }
+        '^' => {
+            if col > 0 {
+                paths += count_paths_from_start_memo(data, row + 1, col - 1, memo);
+            }
+            if col < data[row].len() - 1 {
+                paths += count_paths_from_start_memo(data, row + 1, col + 1, memo);
+            }
+        }
+        _ => {
+            // We should not reach any other characters
+            paths = 0;
+        }
+    }
+
+    // Cache the result
+    memo.insert((row, col), paths);
+    paths
+}
+
+fn process_tachyon_data() -> i32 {
+    process_tachyons(load_tachyon_data()).1
+}
+
+fn get_tachyon_timelines() -> i64 {
+    count_paths(process_tachyons(load_tachyon_data()).0)
 }
